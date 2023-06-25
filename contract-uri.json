@@ -1,0 +1,8 @@
+{
+  "name": "Digital Citizen DAO",
+  "description": "This token conveys citizenship and voting rights to the Digital Citizen DAO",
+  "image": "https://pink-uncertain-junglefowl-438.mypinata.cloud/ipfs/QmafEgsNam9q8oZPYoEZSuKvwqMWTTnjiHMRRv6dV4dKb1",
+  "external_link": "https://digitalcitizendao.com",
+  "seller_fee_basis_points": 1000,
+  "fee_recipient": "0xe3E03958Cb7C6c8506F4a0Cc0c7a2Ad7170310d2"
+}
