@@ -25,6 +25,7 @@ contract DigitalCitizenDAOERC721 is
     uint256 public foundingFatherSupply = 5;
     uint256 public price = 0.08 ether; //TODO: change it to 3 eth
     uint256 public mintLimit = 1;
+    uint256 public recruitmentBonusPercentage = 10;
 
     string public foundingFatherImage =
         "https://pink-uncertain-junglefowl-438.mypinata.cloud/ipfs/QmZ2qMB7EkvxzX1EKsaf1DA4JcaQnZDpqwAjKkfAfdTU1k/Founding.png";
@@ -39,6 +40,8 @@ contract DigitalCitizenDAOERC721 is
 
     bool public transferPaused = true;
     bool public revealed = false;
+
+    address public gnosisWallet = 0xe3E03958Cb7C6c8506F4a0Cc0c7a2Ad7170310d2; //TODO: Change it to main gnosis
 
     Counters.Counter public totalMinted;
 
@@ -66,15 +69,36 @@ contract DigitalCitizenDAOERC721 is
         return super.isApprovedForAll(owner, operator);
     }
 
-    function mintToken(uint256 amount) external payable override {
+    function mintToken(
+        uint256 amount,
+        address recruiter
+    ) external payable override {
         uint256 totalPrice = amount * price;
-
+        address currentRecriter;
         require(
             msg.value >= totalPrice,
             "DigitalCitizenDAOERC721::Incorrect Price"
         );
 
-        _mintToken(msg.sender);
+        if (balanceOf(recruiter) >= 1 && recruiter != address(0)) {
+            currentRecriter = recruiter;
+        } else {
+            currentRecriter = gnosisWallet;
+        }
+
+        uint256 recutirmentBonus = (totalPrice * recruitmentBonusPercentage) /
+            100;
+        uint256 treasuryFunds = totalPrice - recutirmentBonus;
+
+        (bool hs, ) = payable(currentRecriter).call{value: recutirmentBonus}(
+            ""
+        );
+        require(hs);
+
+        (bool os, ) = payable(owner()).call{value: treasuryFunds}("");
+        require(os);
+
+        _mintToken(msg.sender, currentRecriter);
     }
 
     function buildMetadata(
@@ -106,6 +130,20 @@ contract DigitalCitizenDAOERC721 is
                                 imageURI,
                                 '", "attributes":[{"display_type": "date", "trait_type":"Citizen Since","value":"',
                                 currentToken.date.toString(),
+                                '"},{"trait_type":"Recruited By","value":"',
+                                currentToken.recruitedBy == gnosisWallet
+                                    ? string(
+                                        abi.encodePacked(
+                                            toAsciiString(gnosisWallet)
+                                        )
+                                    )
+                                    : string(
+                                        abi.encodePacked(
+                                            toAsciiString(
+                                                currentToken.recruitedBy
+                                            )
+                                        )
+                                    ),
                                 '"},{"trait_type":"Type","value":"',
                                 currentToken.isFoundingFather
                                     ? "Founding Father"
@@ -193,6 +231,27 @@ contract DigitalCitizenDAOERC721 is
         emit NormalImageUpdated(oldNormalImage, _newNormalImage);
     }
 
+    function updateGnosisWallet(
+        address _newGnosisWallet
+    ) external override onlyOwner {
+        address oldGnosisWallet = gnosisWallet;
+        gnosisWallet = _newGnosisWallet;
+
+        emit GnosisWalletUpdated(_newGnosisWallet, oldGnosisWallet);
+    }
+
+    function updateRecruitmentBonusPercentage(
+        uint256 _newBonusPercentage
+    ) external override onlyOwner {
+        uint256 oldBonusPercentage = recruitmentBonusPercentage;
+        recruitmentBonusPercentage = _newBonusPercentage;
+
+        emit RecruitmentBonusPercentageUpdated(
+            _newBonusPercentage,
+            oldBonusPercentage
+        );
+    }
+
     function reveal() external override onlyOwner {
         revealed = true;
 
@@ -206,7 +265,7 @@ contract DigitalCitizenDAOERC721 is
         currentTime = block.timestamp;
     }
 
-    function _mintToken(address reciever) internal {
+    function _mintToken(address reciever, address recruiter) internal {
         uint256 supply = totalSupply();
         totalMinted.increment();
 
@@ -222,7 +281,8 @@ contract DigitalCitizenDAOERC721 is
         Token memory newToken = Token(
             totalMinted.current(),
             _currentTime(),
-            isFoundingFather
+            isFoundingFather,
+            recruiter
         );
 
         tokens[totalMinted.current()] = newToken;
@@ -256,8 +316,20 @@ contract DigitalCitizenDAOERC721 is
         emit Transfer(from, to, tokenId);
     }
 
-    function withdraw() public payable onlyOwner {
-        (bool os, ) = payable(owner()).call{value: address(this).balance}("");
-        require(os);
+    function toAsciiString(address x) internal pure returns (string memory) {
+        bytes memory s = new bytes(40);
+        for (uint i = 0; i < 20; i++) {
+            bytes1 b = bytes1(uint8(uint(uint160(x)) / (2 ** (8 * (19 - i)))));
+            bytes1 hi = bytes1(uint8(b) / 16);
+            bytes1 lo = bytes1(uint8(b) - 16 * uint8(hi));
+            s[2 * i] = char(hi);
+            s[2 * i + 1] = char(lo);
+        }
+        return string(s);
+    }
+
+    function char(bytes1 b) internal pure returns (bytes1 c) {
+        if (uint8(b) < 10) return bytes1(uint8(b) + 0x30);
+        else return bytes1(uint8(b) + 0x57);
     }
 }

@@ -20,9 +20,7 @@ describe("Digital Citizen DAO ERC20 Unit Tests", async () => {
     );
     [owner, addr1, addr2, addr3, treasury, uniswap] = await ethers.getSigners();
 
-    digitalCitizenDAOERC20 = await DigitalCitizenDAOERC20.deploy(
-      treasury.address
-    );
+    digitalCitizenDAOERC20 = await DigitalCitizenDAOERC20.deploy();
 
     await digitalCitizenDAOERC20.deployed();
   });

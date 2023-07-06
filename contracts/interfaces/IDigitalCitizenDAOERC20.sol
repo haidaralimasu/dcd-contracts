@@ -10,6 +10,11 @@ interface IDigitalCitizenDAOERC20 {
         uint256 newInitialSupply
     );
 
+    event FunDistributorUpdated(
+        address oldFundDistributor,
+        address newFundDistributor
+    );
+
     event GetFeeSetted(address getFeeAddress, bool isGetFee);
 
     event ExcldedFromFeesSetted(address account, bool isExcluded);
@@ -17,8 +22,6 @@ interface IDigitalCitizenDAOERC20 {
     event FeeOnBuyUpdated(uint256 oldFeeOnBuy, uint256 newFeeBuy);
 
     event FeeOnSellUpdated(uint256 oldFeeOnSell, uint256 newFeeSell);
-
-    function updateTreasury(address _newTreasury) external;
 
     function updateInitialSupply(uint256 _newInitialSupply) external;
 
@@ -37,4 +40,6 @@ interface IDigitalCitizenDAOERC20 {
     ) external;
 
     function updateFee(uint256 _onBuy, uint256 _onSell) external;
+
+    function updateFunDistributor(address _newFundDistributor) external;
 }

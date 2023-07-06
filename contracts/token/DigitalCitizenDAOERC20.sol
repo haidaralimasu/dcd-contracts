@@ -8,20 +8,20 @@ import {IDigitalCitizenDAOERC20} from "../interfaces/IDigitalCitizenDAOERC20.sol
 
 contract DigitalCitizenDAOERC20 is ERC20, Ownable, IDigitalCitizenDAOERC20 {
     uint256 public initialSupply = 400000000 ether;
-    address public treasury;
 
     mapping(address => bool) public isGetFees;
     mapping(address => bool) public isExcludedFromFees;
 
     uint256 public feeOnBuy = 5;
     uint256 public feeOnSell = 5;
+    address public fundDistributor;
 
-    constructor(address _treasury) ERC20("Digital Citizen DAO", "DCD") {
-        treasury = _treasury;
-
+    constructor(address fundDistributor_) ERC20("Digital Citizen DAO", "DCD") {
         isExcludedFromFees[address(this)] = true;
         isExcludedFromFees[address(0xdead)] = true;
         isExcludedFromFees[owner()] = true;
+
+        fundDistributor = fundDistributor_;
 
         _mint(owner(), initialSupply);
     }
@@ -51,7 +51,7 @@ contract DigitalCitizenDAOERC20 is ERC20, Ownable, IDigitalCitizenDAOERC20 {
         if (_totalFees > 0) {
             uint256 fees = (amount * _totalFees) / 100;
             amount = amount - fees;
-            super._transfer(from, treasury, fees);
+            super._transfer(from, fundDistributor, fees);
         }
 
         super._transfer(from, to, amount);
@@ -61,19 +61,12 @@ contract DigitalCitizenDAOERC20 is ERC20, Ownable, IDigitalCitizenDAOERC20 {
     ONLY OWNER FUNCTIONS
     */
 
-    function updateTreasury(address _newTreasury) external override onlyOwner {
-        address oldTreasury = treasury;
-        treasury = _newTreasury;
-
-        emit TreasuryUpdated(oldTreasury, _newTreasury);
-    }
-
     function updateInitialSupply(
         uint256 _newInitialSupply
     ) external override onlyOwner {
         uint256 oldInitialSupply = initialSupply;
         initialSupply = initialSupply + _newInitialSupply;
-        _mint(treasury, _newInitialSupply);
+        _mint(owner(), _newInitialSupply);
 
         emit InitialSupplyUpdated(oldInitialSupply, _newInitialSupply);
     }
@@ -140,5 +133,14 @@ contract DigitalCitizenDAOERC20 is ERC20, Ownable, IDigitalCitizenDAOERC20 {
     function _setExcludedFromFees(address _account, bool _isExcluded) internal {
         isExcludedFromFees[_account] = _isExcluded;
         emit ExcldedFromFeesSetted(_account, _isExcluded);
+    }
+
+    function updateFunDistributor(
+        address _newFundDistributor
+    ) external onlyOwner {
+        address oldFundDistributor = fundDistributor;
+        fundDistributor = _newFundDistributor;
+
+        emit FunDistributorUpdated(oldFundDistributor, _newFundDistributor);
     }
 }

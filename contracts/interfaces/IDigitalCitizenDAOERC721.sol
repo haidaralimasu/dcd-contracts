@@ -7,6 +7,7 @@ interface IDigitalCitizenDAOERC721 {
         uint256 id;
         uint256 date;
         bool isFoundingFather;
+        address recruitedBy;
     }
 
     event MaxSupplyUpdated(uint256 oldMaxSupply, uint256 newMaxSupply);
@@ -19,11 +20,18 @@ interface IDigitalCitizenDAOERC721 {
 
     event TokenMinted(uint256 tokenId, uint256 time);
 
+    event GnosisWalletUpdated(address newGnosisWallet, address oldGnosisWallet);
+
     event Revealed();
 
     event FoundingFatherImageUpdated(
         string oldFoundingFatherImage,
         string newFoundingFatherImage
+    );
+
+    event RecruitmentBonusPercentageUpdated(
+        uint256 newBonusPercentage,
+        uint256 oldBonusPercentage
     );
 
     event ContractURIUpdated(string oldContractUri, string _newContractUri);
@@ -38,7 +46,7 @@ interface IDigitalCitizenDAOERC721 {
 
     function updateTransferPause(bool _isPause) external;
 
-    function mintToken(uint256 amount) external payable;
+    function mintToken(uint256 amount, address recuriter) external payable;
 
     function updateNormalImage(string memory _newNormalImage) external;
 
@@ -49,4 +57,10 @@ interface IDigitalCitizenDAOERC721 {
     function reveal() external;
 
     function updateContractURI(string memory _newContractUri) external;
+
+    function updateGnosisWallet(address _newGnosisWallet) external;
+
+    function updateRecruitmentBonusPercentage(
+        uint256 _newBonusPercentage
+    ) external;
 }
